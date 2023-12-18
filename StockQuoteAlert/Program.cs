@@ -1,36 +1,61 @@
 ﻿using StockQuoteAlert;
+using System.Collections.Generic;
+using System.Reflection;
+using System;
 using System.Text.Json;
-using static QuoteAPI;
+using System.Globalization;
+using System.Xml.Linq;
 
-internal static class Program
+namespace StockQuoteAlert
 {
-    public static async Task Main(string[] args)
+    internal static class Program
     {
-        string assetName;
-        decimal sellPrice, buyPrice, value;
-        Settings settings;
-
-        string path = Path.Combine(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).Parent.Parent.Parent.FullName, "settings.json");
-
-        settings = await JsonFileReader.ReadAsync<Settings>(path);
-
-        try
+        public static async Task Main(string[] args)
         {
-            assetName = args[0];
-            sellPrice = decimal.Parse(args[1]);
-            buyPrice = decimal.Parse(args[2]);
+            string assetName;
+            decimal sellPrice, buyPrice;
+            Settings settings;
+
+            string settingsPath = Settings.createPath("settings.json");
+            settings = (await JsonFileReader.ReadAsync<Settings>(settingsPath))!;
+
+            try
+            {
+                assetName = args[0];
+                sellPrice = Convert.ToDecimal(args[1], new CultureInfo("en-US"));
+                buyPrice = Convert.ToDecimal(args[2], new CultureInfo("en-US"));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error parsing args values:\n" + e.Message);
+                return;
+            }
+
+            QuoteAPI api = new (settings.Api!.Token!);
+            MailManager email = new (settings.Smtp!.Server!, settings.Smtp!.Port!, settings.Smtp!.Username!, settings.Smtp.Password!);
+
+            Stock actualPrice;
+            string action;
+
+            while (true)
+            {
+                actualPrice = await api.GetPrice(assetName);
+                Console.WriteLine("Regular Market Price: " + actualPrice.price + " " + actualPrice.currency + ".");
+                Console.WriteLine(sellPrice + " " + buyPrice);
+
+                if (actualPrice.price > sellPrice)
+                {
+                    Console.WriteLine("Sending emails to sell shares.");
+                    email.SendEmailMessage(settings.Sender!, settings.Recipients!, actualPrice, assetName, "sell");
+                }
+                else if (actualPrice.price < buyPrice)
+                {
+                    Console.WriteLine("Sending emails to buy shares.");
+                    email.SendEmailMessage(settings.Sender!, settings.Recipients!, actualPrice, assetName, "buy");
+                }
+
+                await Task.Delay(settings.Api!.Delay!);
+            }
         }
-        catch (Exception e){
-            Console.WriteLine("Error parsing args values:\n"+e.Message);
-            return;
-        }
-
-        Console.WriteLine(settings.Api);
-
-        var api = new QuoteAPI(settings.Api.Token);
-
-        value = await api.GetPrice(assetName);
-        
-        Console.WriteLine("Value: " + value);
     }
 }
