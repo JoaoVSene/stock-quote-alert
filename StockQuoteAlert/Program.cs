@@ -16,8 +16,7 @@ namespace StockQuoteAlert
             decimal sellPrice, buyPrice;
             Settings settings;
 
-            string settingsPath = Settings.createPath("settings.json");
-            settings = (await JsonFileReader.ReadAsync<Settings>(settingsPath))!;
+            settings = (await JsonFileReader.ReadAsync<Settings>("settings.json"))!;
 
             try
             {

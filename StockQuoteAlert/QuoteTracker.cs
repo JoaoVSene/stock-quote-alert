@@ -48,7 +48,7 @@ namespace StockQuoteAlert
                 }
                 else
                 {
-                    Console.WriteLine("Sending emails to buy shares.");
+                    Console.WriteLine("Not sending any emails.");
                 }
 
                 await Task.Delay(settings.Api!.Delay!);

@@ -29,10 +29,6 @@ namespace StockQuoteAlert
         public string? Sender { get; set; }
         public List<string>? Recipients { get; set; }
 
-        public static string createPath(string localPath)
-        {
-            return Path.Combine(Directory.GetParent(System.IO.Directory.GetCurrentDirectory())!.Parent!.Parent!.Parent!.FullName, localPath);
-        }
     }
     public static class JsonFileReader
     {

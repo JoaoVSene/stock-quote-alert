@@ -62,7 +62,7 @@ namespace StockQuoteAlert
         public void SendEmailMessage(string sender, List<string> recipients, Stock stock, string assetName,string action)
         {
             SmtpClient client;
-            
+
             try
             {
                 client = new SmtpClient(this.server, this.port)
@@ -91,8 +91,8 @@ namespace StockQuoteAlert
                 
                 try
                 {
-                    MailMessage mensagemEmail = new MailMessage(sender, recipient, subject, body);
-                    client.Send(mensagemEmail);
+                    MailMessage mailMessage = new (sender, recipient, subject, body);
+                    client.Send(mailMessage);
 
                     Console.WriteLine("Email sent to " + recipient + " at " + DateTime.Now.ToString() + ".");
                 }

@@ -11,6 +11,7 @@ namespace StockQuoteAlert
     {
         public decimal price;
         public string? currency;
+
         public Stock(decimal price,string currency)
         {
             this.price = price;
