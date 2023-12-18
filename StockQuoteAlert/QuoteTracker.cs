@@ -36,12 +36,12 @@ namespace StockQuoteAlert
                 Console.WriteLine("Regular Market Price: " + actualPrice.price + " " + actualPrice.currency +
                     " at " + DateTime.Now.ToString() + ".");
 
-                if (actualPrice.price > sellPrice)
+                if (actualPrice.price >= sellPrice)
                 {
                     Console.WriteLine("Sending emails to sell shares.");
                     email.SendEmailMessage(settings.Sender!, settings.Recipients!, actualPrice, assetName, "sell");
                 }
-                else if (actualPrice.price<buyPrice)
+                else if (actualPrice.price <= buyPrice)
                 {
                     Console.WriteLine("Sending emails to buy shares.");
                     email.SendEmailMessage(settings.Sender!, settings.Recipients!, actualPrice, assetName, "buy");
