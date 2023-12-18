@@ -5,45 +5,64 @@ using System.Xml.Linq;
 using System.Text.Json.Nodes;
 using System.Globalization;
 
-public class QuoteAPI
+namespace StockQuoteAlert
 {
-	private readonly string token;
-    private readonly HttpClient client;
-
-    public QuoteAPI(string token)
+    public class Stock
     {
-		this.token = token;
-        this.client = new HttpClient();
+        public decimal price;
+        public string? currency;
+        public Stock(decimal price,string currency)
+        {
+            this.price = price;
+            this.currency = currency;
+        }
     }
+    public class QuoteAPI
+    {
+        private readonly string token;
+        private readonly HttpClient client;
 
-	public async Task<decimal> GetPrice(string assetName){
-
-		string url = "https://brapi.dev/api/quote/" + assetName + "?token=" + this.token;
-        string responseBody;
-        decimal regularMarketPrice = 0.0M;
-
-        HttpResponseMessage response = await client.GetAsync(url);
-        try
+        public QuoteAPI(string token)
         {
-            response.EnsureSuccessStatusCode();
-        }
-        catch(Exception ex) { 
-            Console.WriteLine("Error Requesting API:\n"+ex.Message);
+            this.token = token;
+            this.client = new HttpClient();
         }
 
-        responseBody = await response.Content.ReadAsStringAsync();
+        public async Task<Stock> GetPrice(string assetName)
+        {
+            string url = "https://brapi.dev/api/quote/" + assetName + "?token=" + this.token;
+            string responseBody, currency = "";
+            decimal regularMarketPrice = 0.0M;
+            Stock stock;
 
-        try
-        {
-            var jsonObject = JsonNode.Parse(responseBody)!.AsObject();
-            var node = jsonObject["results"]![0]!["regularMarketPrice"]!;
-            regularMarketPrice = Convert.ToDecimal(node.ToString(), new CultureInfo("en-US"));
+            HttpResponseMessage response = await client.GetAsync(url);
+            try
+            {
+                response.EnsureSuccessStatusCode();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error Requesting API:\n" + ex.Message);
+            }
+
+            responseBody = await response.Content.ReadAsStringAsync();
+
+            try
+            {
+                var jsonObject = JsonNode.Parse(responseBody)!.AsObject();
+                string node = (jsonObject["results"]![0]!["regularMarketPrice"]!).ToString();
+                
+                regularMarketPrice = Convert.ToDecimal(node, new CultureInfo("en-US"));
+                currency = (jsonObject["results"]![0]!["currency"]!).ToString();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error Parsing JSON:\n" + ex.Message);
+            }
+
+            stock = new Stock(regularMarketPrice, currency);
+
+            return stock;
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine("Error Parsing JSON:\n"+ex.Message);
-        }
-        
-        return regularMarketPrice;
     }
 }
